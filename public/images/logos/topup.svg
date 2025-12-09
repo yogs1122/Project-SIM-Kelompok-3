@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="topupGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background Circle -->
+  <circle cx="50" cy="50" r="48" fill="url(#topupGrad)"/>
+  
+  <!-- Plus Icon -->
+  <g stroke="white" stroke-width="5" stroke-linecap="round" fill="none">
+    <line x1="50" y1="28" x2="50" y2="72"/>
+    <line x1="28" y1="50" x2="72" y2="50"/>
+  </g>
+  
+  <!-- Arrow pointing up -->
+  <path d="M 50 16 L 62 32 M 50 16 L 38 32" stroke="white" stroke-width="4" stroke-linecap="round" fill="none"/>
+</svg>
