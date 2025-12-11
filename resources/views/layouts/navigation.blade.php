@@ -17,8 +17,11 @@
                     </x-nav-link>
                     
                     @if(Auth::user()->isAdmin())
-                        <x-nav-link :href="route('admin.users')" :active="request()->routeIs('admin.*')">
-                            {{ __('Admin Panel') }}
+                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                            {{ __('Manajemen User') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('admin.transactions.index')" :active="request()->routeIs('admin.transactions.*')">
+                            {{ __('Transaksi') }}
                         </x-nav-link>
                     @endif
                 </div>

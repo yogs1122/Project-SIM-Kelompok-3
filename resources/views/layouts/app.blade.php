@@ -47,10 +47,12 @@
         <span class="font-medium text-gray-700 label">Dashboard</span>
     </a>
 
+    @if(!Auth::user() || !Auth::user()->isAdmin())
     <a href="{{ route('transactions.topup') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">⬆️</span>
         <span class="font-medium text-gray-700 label">Top Up</span>
     </a>
+    @endif
 
     <a href="{{ route('transactions.transfer') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">🔁</span>

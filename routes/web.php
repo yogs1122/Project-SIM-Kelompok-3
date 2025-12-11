@@ -7,6 +7,8 @@ use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\SmartFinanceController;
 use App\Http\Controllers\SalesForumController;
+use App\Http\Controllers\Admin\AdminUserController;
+use App\Http\Controllers\Admin\AdminTransactionController;
 
 // Public Routes
 Route::get('/', function () {
@@ -45,22 +47,25 @@ Route::middleware(['auth'])->group(function () {
     });
     
     // Admin Routes
-    Route::middleware(['role:admin'])->prefix('admin')->group(function () {
+    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', function () {
             return view('admin.dashboard-new');
-        })->name('admin.dashboard');
+        })->name('dashboard');
         
-        Route::get('/users', function () {
-            return view('admin.users');
-        })->name('admin.users');
+        // User Management Routes
+        Route::resource('users', AdminUserController::class);
         
-        Route::get('/transactions', function () {
-            return view('admin.transactions');
-        })->name('admin.transactions');
+        // Transaction Management Routes
+        Route::prefix('transactions')->name('transactions.')->group(function () {
+            Route::get('/', [AdminTransactionController::class, 'index'])->name('index');
+            Route::get('/{user}/detail', [AdminTransactionController::class, 'userDetail'])->name('user-detail');
+            // Top-up reporting
+            Route::get('/topups', [AdminTransactionController::class, 'topUpReport'])->name('topups');
+        });
         
         Route::get('/umkm', function () {
             return view('admin.umkm');
-        })->name('admin.umkm');
+        })->name('umkm');
     });
     
     // Profile Routes (dari Breeze)

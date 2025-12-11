@@ -13,12 +13,22 @@ class TransactionController extends Controller
     // Top Up
     public function topupIndex()
     {
+        // Prevent admin users from accessing top-up UI
+        if (Auth::user() && Auth::user()->isAdmin()) {
+            return redirect()->route('dashboard')->with('error', 'Admin tidak diperbolehkan melakukan top up.');
+        }
+
         $wallet = Auth::user()->wallet;
         return view('transactions.topup', compact('wallet'));
     }
 
     public function topupStore(Request $request)
     {
+        // Prevent admin from performing top-up actions
+        if (Auth::user() && Auth::user()->isAdmin()) {
+            return redirect()->route('dashboard')->with('error', 'Admin tidak diperbolehkan melakukan top up.');
+        }
+
         $validated = $request->validate([
             'amount' => 'required|numeric|min:10000|max:10000000',
         ]);

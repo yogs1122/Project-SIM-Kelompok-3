@@ -167,6 +167,7 @@
                     </h3>
                     
                     <div class="transaction-grid">
+                        @if(!Auth::user() || !Auth::user()->isAdmin())
                         <!-- Top Up Button -->
                         <a href="{{ route('transactions.topup') }}" class="btn-transaction card-hover group">
                             <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 rounded-xl p-6 text-white flex flex-col items-center justify-center text-center relative overflow-hidden hover:shadow-2xl transition-shadow">
@@ -179,6 +180,7 @@
                                 </div>
                             </div>
                         </a>
+                        @endif
 
                         <!-- Transfer Button -->
                         <a href="{{ route('transactions.transfer') }}" class="btn-transaction card-hover group">
