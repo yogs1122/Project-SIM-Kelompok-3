@@ -48,6 +48,23 @@
                     @enderror
                 </div>
 
+                <!-- Subcategory -->
+                <div id="subcategoryWrapper" class="hidden">
+                    <label for="subcategory" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Subkategori
+                    </label>
+                    <select
+                        id="subcategory"
+                        name="subcategory"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-green-500 transition"
+                    >
+                        <option value="">-- Pilih Subkategori --</option>
+                    </select>
+                    @error('subcategory')
+                        <p class="text-red-500 text-sm mt-1">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <!-- Description -->
                 <div>
                     <label for="description" class="block text-sm font-semibold text-gray-700 mb-2">
@@ -173,5 +190,67 @@
                 reader.readAsDataURL(file);
             }
         }
+    </script>
+    <script>
+        // Subcategory mapping and dynamic population
+        const subcategories = {
+            produk: [
+                { value: 'elektronik', label: 'Elektronik' },
+                { value: 'pakaian', label: 'Pakaian' },
+                { value: 'makanan_minuman', label: 'Makanan & Minuman' },
+                { value: 'peralatan_rumah', label: 'Peralatan Rumah' },
+                { value: 'kecantikan', label: 'Kecantikan' }
+            ],
+            layanan: [
+                { value: 'kesehatan', label: 'Kesehatan' },
+                { value: 'kebersihan', label: 'Kebersihan' },
+                { value: 'pengiriman', label: 'Pengiriman' },
+                { value: 'desain_kreatif', label: 'Desain & Kreatif' },
+                { value: 'konsultasi', label: 'Konsultasi' }
+            ],
+            umum: [
+                { value: 'tawaran', label: 'Tawaran' },
+                { value: 'komunitas', label: 'Komunitas' },
+                { value: 'lainnya', label: 'Lainnya' }
+            ],
+            lowongan: [
+                { value: 'penuh_waktu', label: 'Penuh Waktu' },
+                { value: 'paruh_waktu', label: 'Paruh Waktu' },
+                { value: 'magang', label: 'Magang' },
+                { value: 'freelance', label: 'Freelance' }
+            ]
+        };
+
+        const categorySelect = document.getElementById('category');
+        const subcategoryWrapper = document.getElementById('subcategoryWrapper');
+        const subcategorySelect = document.getElementById('subcategory');
+
+        function populateSubcategories(cat, selected = null) {
+            // Clear
+            subcategorySelect.innerHTML = '<option value="">-- Pilih Subkategori --</option>';
+            if (!cat || !subcategories[cat]) {
+                subcategoryWrapper.classList.add('hidden');
+                return;
+            }
+            subcategories[cat].forEach(opt => {
+                const el = document.createElement('option');
+                el.value = opt.value;
+                el.textContent = opt.label;
+                if (selected && selected === opt.value) el.selected = true;
+                subcategorySelect.appendChild(el);
+            });
+            subcategoryWrapper.classList.remove('hidden');
+        }
+
+        // On load, populate if old value exists
+        document.addEventListener('DOMContentLoaded', () => {
+            const initialCat = categorySelect.value || '{{ old('category') }}';
+            const initialSub = '{{ old('subcategory') }}';
+            if (initialCat) populateSubcategories(initialCat, initialSub);
+        });
+
+        categorySelect.addEventListener('change', (e) => {
+            populateSubcategories(e.target.value);
+        });
     </script>
 </x-app-layout>

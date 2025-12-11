@@ -13,6 +13,7 @@ class SalesForumPost extends Model
         'description',
         'price',
         'category',
+        'subcategory',
         'image',
         'status',
         'views',
@@ -45,6 +46,14 @@ class SalesForumPost extends Model
     public function scopeByCategory($query, $category)
     {
         return $query->where('category', $category);
+    }
+
+    /**
+     * Scope: By subcategory
+     */
+    public function scopeBySubcategory($query, $subcategory)
+    {
+        return $query->where('subcategory', $subcategory);
     }
 
     /**

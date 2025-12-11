@@ -14,7 +14,7 @@ class SalesForumController extends Controller
      */
     public function index(Request $request)
     {
-        $query = SalesForumPost::active()->latest();
+        $query = SalesForumPost::active()->with('user')->latest();
 
         // Filter by category if provided
         if ($request->has('category') && $request->category !== 'all') {
@@ -23,8 +23,45 @@ class SalesForumController extends Controller
 
         // Search by title
         if ($request->has('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%')
+            $query->where(function($q) use ($request) {
+                $q->where('title', 'like', '%' . $request->search . '%')
                   ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Filter by subcategory if provided
+        if ($request->has('subcategory') && $request->subcategory) {
+            $query->where('subcategory', $request->subcategory);
+        }
+
+        // Filter by price range
+        if ($request->filled('price_min')) {
+            $query->where('price', '>=', (float) $request->price_min);
+        }
+        if ($request->filled('price_max')) {
+            $query->where('price', '<=', (float) $request->price_max);
+        }
+
+        // Only show posts that have an image
+        if ($request->has('has_image') && $request->has_image) {
+            $query->whereNotNull('image');
+        }
+
+        // Sorting
+        if ($request->filled('sort')) {
+            switch ($request->sort) {
+                case 'price_asc':
+                    $query->orderBy('price', 'asc');
+                    break;
+                case 'price_desc':
+                    $query->orderBy('price', 'desc');
+                    break;
+                case 'newest':
+                    $query->latest();
+                    break;
+                default:
+                    // keep default ordering
+            }
         }
 
         $posts = $query->paginate(12);
@@ -52,6 +89,7 @@ class SalesForumController extends Controller
             'description' => 'required|string|max:5000',
             'price' => 'nullable|numeric|min:0',
             'category' => 'required|in:umum,produk,layanan,lowongan',
+            'subcategory' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
@@ -110,6 +148,7 @@ class SalesForumController extends Controller
             'description' => 'required|string|max:5000',
             'price' => 'nullable|numeric|min:0',
             'category' => 'required|in:umum,produk,layanan,lowongan',
+            'subcategory' => 'nullable|string|max:255',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
