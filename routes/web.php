@@ -47,14 +47,30 @@ Route::middleware(['auth'])->group(function () {
     // Admin Routes
     Route::middleware(['role:admin'])->prefix('admin')->group(function () {
         Route::get('/dashboard', function () {
-            return view('admin.dashboard');
+            return view('admin.dashboard-new');
         })->name('admin.dashboard');
+        
+        Route::get('/users', function () {
+            return view('admin.users');
+        })->name('admin.users');
+        
+        Route::get('/transactions', function () {
+            return view('admin.transactions');
+        })->name('admin.transactions');
+        
+        Route::get('/umkm', function () {
+            return view('admin.umkm');
+        })->name('admin.umkm');
     });
     
     // Profile Routes (dari Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // UMKM Upgrade Routes
+    Route::get('/umkm/upgrade', [ProfileController::class, 'showUpgradeForm'])->name('umkm.upgrade');
+    Route::post('/umkm/upgrade', [ProfileController::class, 'upgradeToUmkm'])->name('umkm.upgrade.post');
     
     // Profile Photo Routes
     Route::post('/profile/photo', [ProfilePhotoController::class, 'upload'])->name('profile.photo.upload');

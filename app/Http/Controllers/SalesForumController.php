@@ -38,6 +38,12 @@ class SalesForumController extends Controller
      */
     public function create()
     {
+        // Pastikan hanya pengguna dengan role UMKM yang dapat membuat post penjualan
+        if (!Auth::user() || !Auth::user()->isUMKM()) {
+            return redirect()->route('umkm.upgrade')
+                             ->with('error', 'Untuk melakukan penjualan, Anda harus upgrade ke akun Pedagang UMKM terlebih dahulu.');
+        }
+
         $categories = ['umum', 'produk', 'layanan', 'lowongan'];
         return view('sales_forum.create', compact('categories'));
     }
@@ -47,6 +53,12 @@ class SalesForumController extends Controller
      */
     public function store(Request $request)
     {
+        // Hanya UMKM yang boleh menyimpan post penjualan
+        if (!Auth::user() || !Auth::user()->isUMKM()) {
+            return redirect()->route('umkm.upgrade')
+                             ->with('error', 'Untuk melakukan penjualan, Anda harus upgrade ke akun Pedagang UMKM terlebih dahulu.');
+        }
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:5000',

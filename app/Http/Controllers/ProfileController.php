@@ -70,4 +70,29 @@ class ProfileController extends Controller
 
         return Redirect::to('/');
     }
+
+    /**
+     * Show the upgrade to UMKM form.
+     */
+    public function showUpgradeForm(Request $request): View
+    {
+        return view('umkm.upgrade');
+    }
+
+    /**
+     * Upgrade the authenticated user to UMKM role.
+     */
+    public function upgradeToUmkm(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->isUMKM()) {
+            return Redirect::route('profile.edit')->with('success', 'Anda sudah menjadi Pedagang UMKM.');
+        }
+
+        // Assign role 'umkm' (sederhana — jika butuh verifikasi, tambahkan proses approval)
+        $user->assignRole('umkm');
+
+        return Redirect::route('profile.edit')->with('success', 'Akun berhasil diupgrade menjadi Pedagang UMKM.');
+    }
 }

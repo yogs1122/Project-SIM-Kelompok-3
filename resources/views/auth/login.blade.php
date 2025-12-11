@@ -2,6 +2,24 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
+    <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        <h2 class="text-lg font-semibold text-blue-900 mb-3">Pilih Tipe Akun</h2>
+        <div class="space-y-2">
+            <label class="flex items-center p-3 border border-blue-300 rounded cursor-pointer hover:bg-blue-100" for="role_user">
+                <input id="role_user" type="radio" name="role" value="user" class="rounded border-gray-300 text-blue-600" {{ old('role', 'user') === 'user' ? 'checked' : '' }} />
+                <span class="ms-3 font-medium text-gray-800">👤 User Biasa</span>
+            </label>
+            <label class="flex items-center p-3 border border-purple-300 rounded cursor-pointer hover:bg-purple-100" for="role_umkm">
+                <input id="role_umkm" type="radio" name="role" value="umkm" class="rounded border-gray-300 text-purple-600" {{ old('role') === 'umkm' ? 'checked' : '' }} />
+                <span class="ms-3 font-medium text-gray-800">🏪 Pedagang UMKM</span>
+            </label>
+            <label class="flex items-center p-3 border border-red-300 rounded cursor-pointer hover:bg-red-100" for="role_admin">
+                <input id="role_admin" type="radio" name="role" value="admin" class="rounded border-gray-300 text-red-600" {{ old('role') === 'admin' ? 'checked' : '' }} />
+                <span class="ms-3 font-medium text-gray-800">🛡️ Administrator</span>
+            </label>
+        </div>
+    </div>
+
     <form method="POST" action="{{ route('login') }}">
         @csrf
 
