@@ -5,6 +5,18 @@
 
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <form method="GET" class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm">From</label>
+                    <input type="date" name="from" value="{{ request('from') }}" class="border rounded px-2 py-1" />
+                    <label class="text-sm">To</label>
+                    <input type="date" name="to" value="{{ request('to') }}" class="border rounded px-2 py-1" />
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="px-3 py-2 bg-gray-200 rounded">Filter</button>
+                    <button type="submit" name="export" value="csv" class="px-3 py-2 bg-green-600 text-white rounded">Export CSV</button>
+                </div>
+            </form>
             <div class="bg-white p-6 rounded-lg shadow">
                 <h3 class="font-semibold text-lg mb-4">Top-up per User (Top {{ $topUpByUser->count() }})</h3>
                 <div class="overflow-x-auto">

@@ -23,6 +23,9 @@
                         <x-nav-link :href="route('admin.transactions.index')" :active="request()->routeIs('admin.transactions.*')">
                             {{ __('Transaksi') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('admin.smartfinance.index')" :active="request()->routeIs('admin.smartfinance.*')">
+                            {{ __('Smart Finance') }}
+                        </x-nav-link>
                     @endif
                 </div>
             </div>

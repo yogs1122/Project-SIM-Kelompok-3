@@ -54,30 +54,40 @@
     </a>
     @endif
 
+    @if(!Auth::user() || !Auth::user()->isAdmin())
     <a href="{{ route('transactions.transfer') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">🔁</span>
         <span class="font-medium text-gray-700 label">Transfer</span>
     </a>
+    @endif
 
+    @if(!Auth::user() || !Auth::user()->isAdmin())
     <a href="{{ route('transactions.withdraw') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">⬇️</span>
         <span class="font-medium text-gray-700 label">Withdraw</span>
     </a>
+    @endif
 
+    @if(!Auth::user() || !Auth::user()->isAdmin())
     <a href="{{ route('transactions.payment') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">🧾</span>
         <span class="font-medium text-gray-700 label">Pembayaran</span>
     </a>
+    @endif
 
+    @if(!Auth::user() || !Auth::user()->isAdmin())
     <a href="{{ route('transactions.history') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">📜</span>
         <span class="font-medium text-gray-700 label">Riwayat</span>
     </a>
+    @endif
 
+    @if(!Auth::user() || !Auth::user()->isAdmin())
     <a href="{{ route('profile.edit') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">👤</span>
         <span class="font-medium text-gray-700 label">Profil</span>
     </a>
+    @endif
 
     <a href="{{ route('smartfinance.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">📊</span>
@@ -86,7 +96,7 @@
 
     <a href="{{ route('sales_forum.index') }}" class="flex items-center px-3 py-2 rounded-md bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border-l-4 border-green-500 nav-item transition">
         <span class="mr-3 icon text-lg">🛍️</span>
-        <span class="font-bold text-green-700 label">Forum Jual Beli</span>
+        <span class="font-bold text-green-700 label">{{ Auth::user()->isAdmin() ? 'Forum Penjualan' : 'Forum Jual Beli' }}</span>
     </a>
 
     <!-- Logout -->

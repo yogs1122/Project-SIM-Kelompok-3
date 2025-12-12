@@ -89,23 +89,35 @@ class AdminTransactionController extends Controller
      */
     public function topUpReport(Request $request)
     {
+        $from = $request->input('from');
+        $to = $request->input('to');
+
         // Top-up totals per user
-        $topUpByUser = DB::table('transactions')
+        $topUpQuery = DB::table('transactions')
             ->join('users', 'users.id', '=', 'transactions.user_id')
             ->where('transactions.type', 'topup')
             ->selectRaw('users.id as user_id, users.name, users.email, SUM(transactions.amount) as total_topup, COUNT(transactions.id) as total_count')
             ->groupBy('users.id', 'users.name', 'users.email')
-            ->orderByDesc('total_topup')
-            ->limit(50)
-            ->get();
+            ->orderByDesc('total_topup');
+
+        if ($from && $to) {
+            $topUpQuery->whereBetween('transactions.created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+        }
+
+        $topUpByUser = $topUpQuery->limit(50)->get();
 
         // Monthly totals and unique users (to compute average per user per month)
-        $monthly = DB::table('transactions')
+        $monthlyQuery = DB::table('transactions')
             ->where('type', 'topup')
             ->selectRaw('YEAR(created_at) as year, MONTH(created_at) as month, SUM(amount) as total_amount, COUNT(DISTINCT user_id) as unique_users')
             ->groupByRaw('YEAR(created_at), MONTH(created_at)')
-            ->orderByRaw('YEAR(created_at) ASC, MONTH(created_at) ASC')
-            ->get();
+            ->orderByRaw('YEAR(created_at) ASC, MONTH(created_at) ASC');
+
+        if ($from && $to) {
+            $monthlyQuery->whereBetween('created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+        }
+
+        $monthly = $monthlyQuery->get();
 
         $labels = [];
         $monthlyAvg = [];
@@ -115,6 +127,150 @@ class AdminTransactionController extends Controller
             $monthlyAvg[] = round($avg, 2);
         }
 
+        // CSV export
+        if ($request->input('export') === 'csv') {
+            $filename = 'topups_report_' . now()->format('Ymd_His') . '.csv';
+            $handle = fopen('php://memory', 'w');
+            fputcsv($handle, ['Nama', 'Email', 'Total Top-up', 'Jumlah Transaksi']);
+            foreach ($topUpByUser as $row) {
+                fputcsv($handle, [$row->name, $row->email, $row->total_topup, $row->total_count]);
+            }
+            fseek($handle, 0);
+            return response(stream_get_contents($handle), 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
+
         return view('admin.transactions.topups', compact('topUpByUser', 'monthly', 'labels', 'monthlyAvg'));
+    }
+
+    /**
+     * Transfer report: sent and received per user
+     */
+    public function transferReport(Request $request)
+    {
+        $from = $request->input('from');
+        $to = $request->input('to');
+
+        // Sent transfers (description format: 'Transfer ke {name} ...')
+        $sentQuery = DB::table('transactions')
+            ->where('type', 'transfer')
+            ->where('description', 'like', 'Transfer ke %')
+            ->join('users', 'users.id', '=', 'transactions.user_id')
+            ->selectRaw('users.id as user_id, users.name, users.email, COUNT(transactions.id) as sent_count, SUM(transactions.amount) as sent_total')
+            ->groupBy('users.id', 'users.name', 'users.email');
+
+        // Received transfers (description format: 'Transfer dari {name}')
+        $receivedQuery = DB::table('transactions')
+            ->where('type', 'transfer')
+            ->where('description', 'like', 'Transfer dari %')
+            ->join('users', 'users.id', '=', 'transactions.user_id')
+            ->selectRaw('users.id as user_id, users.name, users.email, COUNT(transactions.id) as received_count, SUM(transactions.amount) as received_total')
+            ->groupBy('users.id', 'users.name', 'users.email');
+
+        if ($from && $to) {
+            $sentQuery->whereBetween('transactions.created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+            $receivedQuery->whereBetween('transactions.created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+        }
+
+        $sent = $sentQuery->get()->keyBy('user_id');
+        $received = $receivedQuery->get()->keyBy('user_id');
+
+        // Merge into combined per-user array
+        $users = collect([]);
+        $allIds = $sent->keys()->merge($received->keys())->unique();
+        foreach ($allIds as $id) {
+            $s = $sent->get($id);
+            $r = $received->get($id);
+            $users->push((object)[
+                'user_id' => $id,
+                'name' => $s->name ?? $r->name ?? '—',
+                'email' => $s->email ?? $r->email ?? '—',
+                'sent_count' => $s->sent_count ?? 0,
+                'sent_total' => $s->sent_total ?? 0,
+                'received_count' => $r->received_count ?? 0,
+                'received_total' => $r->received_total ?? 0,
+            ]);
+        }
+
+        // Sort by total activity
+        $users = $users->sortByDesc(function ($u) {
+            return ($u->sent_total ?? 0) + ($u->received_total ?? 0);
+        })->values();
+
+        if ($request->input('export') === 'csv') {
+            $filename = 'transfers_report_' . now()->format('Ymd_His') . '.csv';
+            $handle = fopen('php://memory', 'w');
+            fputcsv($handle, ['Nama', 'Email', 'Sent Count', 'Sent Total', 'Received Count', 'Received Total']);
+            foreach ($users as $row) {
+                fputcsv($handle, [$row->name, $row->email, $row->sent_count, $row->sent_total, $row->received_count, $row->received_total]);
+            }
+            fseek($handle, 0);
+            return response(stream_get_contents($handle), 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
+
+        return view('admin.transactions.transfers', compact('users'));
+    }
+
+    /**
+     * Weekly transaction history (last 7 days)
+     */
+    public function weeklyHistory(Request $request)
+    {
+        $from = $request->input('from');
+        $to = $request->input('to');
+        $since = $from && $to ? null : now()->subDays(7);
+
+        $txQuery = DB::table('transactions')
+            ->join('users', 'users.id', '=', 'transactions.user_id')
+            ->select('transactions.*', 'users.name as user_name', 'users.email as user_email')
+            ->orderByDesc('transactions.created_at');
+
+        if ($from && $to) {
+            $txQuery->whereBetween('transactions.created_at', [$from . ' 00:00:00', $to . ' 23:59:59']);
+        } else {
+            $txQuery->where('transactions.created_at', '>=', $since);
+        }
+
+        $transactions = $txQuery->get();
+
+        // Group by user for summary
+        $grouped = $transactions->groupBy('user_id')->map(function ($group) {
+            return [
+                'user_name' => $group->first()->user_name,
+                'user_email' => $group->first()->user_email,
+                'count' => $group->count(),
+                'total' => $group->sum('amount'),
+                'transactions' => $group,
+            ];
+        });
+
+        if ($request->input('export') === 'csv') {
+            $filename = 'weekly_transactions_' . now()->format('Ymd_His') . '.csv';
+            $handle = fopen('php://memory', 'w');
+            fputcsv($handle, ['Waktu', 'User', 'Email', 'Tipe', 'Jumlah', 'Status', 'Referensi']);
+            foreach ($transactions as $t) {
+                fputcsv($handle, [
+                    $t->created_at,
+                    $t->user_name,
+                    $t->user_email,
+                    $t->type,
+                    $t->amount,
+                    $t->status,
+                    $t->reference_number,
+                ]);
+            }
+            fseek($handle, 0);
+            return response(stream_get_contents($handle), 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]);
+        }
+
+        return view('admin.transactions.weekly', compact('transactions', 'grouped'));
     }
 }

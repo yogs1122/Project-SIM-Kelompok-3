@@ -61,11 +61,22 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{user}/detail', [AdminTransactionController::class, 'userDetail'])->name('user-detail');
             // Top-up reporting
             Route::get('/topups', [AdminTransactionController::class, 'topUpReport'])->name('topups');
+            // Transfer reporting
+            Route::get('/transfers', [AdminTransactionController::class, 'transferReport'])->name('transfers');
+            // Weekly transaction history (last 7 days)
+            Route::get('/weekly', [AdminTransactionController::class, 'weeklyHistory'])->name('weekly');
         });
         
         Route::get('/umkm', function () {
             return view('admin.umkm');
         })->name('umkm');
+
+        // Admin Smart Finance
+        Route::prefix('smart-finance')->name('smartfinance.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AdminSmartFinanceController::class, 'index'])->name('index');
+            Route::get('/{user}', [\App\Http\Controllers\Admin\AdminSmartFinanceController::class, 'show'])->name('show');
+            Route::post('/{user}/recommend', [\App\Http\Controllers\Admin\AdminSmartFinanceController::class, 'storeRecommendation'])->name('recommend');
+        });
     });
     
     // Profile Routes (dari Breeze)

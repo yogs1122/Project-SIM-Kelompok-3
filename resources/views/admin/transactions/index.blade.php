@@ -7,6 +7,12 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <!-- Quick Report Links -->
+            <div class="flex items-center justify-end space-x-3">
+                <a href="{{ route('admin.transactions.topups') }}" class="inline-flex items-center px-3 py-2 bg-green-600 text-white rounded-md">Top-up Report</a>
+                <a href="{{ route('admin.transactions.transfers') }}" class="inline-flex items-center px-3 py-2 bg-blue-600 text-white rounded-md">Transfer Report</a>
+                <a href="{{ route('admin.transactions.weekly') }}" class="inline-flex items-center px-3 py-2 bg-indigo-600 text-white rounded-md">Weekly History</a>
+            </div>
             
             <!-- Summary Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
