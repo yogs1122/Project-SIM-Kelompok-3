@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+
 use App\Models\Transaction;
+use App\Models\SmartFinanceRecommendation;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class SmartFinanceController extends Controller
 {
@@ -18,7 +20,14 @@ class SmartFinanceController extends Controller
 
         if ($transactions->count() < 2) {
             $tips = ["Tambah transaksi untuk hasil analisis yang lebih akurat 🔍"];
-            return view('smart_finance.index', compact('tips'))
+
+            // Load latest admin recommendations even if user has few transactions
+            $recommendations = SmartFinanceRecommendation::where('user_id', $user->id)
+                ->orderByDesc('created_at')
+                ->take(5)
+                ->get();
+
+            return view('smart_finance.index', compact('tips','recommendations'))
                 ->with([
                     'income' => 0,
                     'expense' => 0,
@@ -79,12 +88,19 @@ class SmartFinanceController extends Controller
             $tips[] = "Pengeluaran bulanan sangat fluktuatif (CV=" . round($cv,2) . "). Pertimbangkan membuat anggaran tetap dan menyiapkan dana cadangan.";
         }
 
+        // Load latest admin recommendations for this user
+        $recommendations = SmartFinanceRecommendation::where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get();
+
         return view('smart_finance.index', compact(
             'income',
             'expense',
             'wallet',
             'latestTransactions',
             'tips',
+            'recommendations',
             'regressionPoints',
             'regressionModel',
             'forecastPoints',
@@ -98,6 +114,24 @@ class SmartFinanceController extends Controller
             'avgTx',
             'monthlyStd'
         ));
+    }
+
+    // Mark a recommendation as read by the owner
+    public function markRecommendationRead(Request $request, SmartFinanceRecommendation $rec)
+    {
+        $user = Auth::user();
+        if ($rec->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $rec->is_read = true;
+        $rec->save();
+
+        if ($request->wantsJson()) {
+            return response()->json(['status' => 'ok']);
+        }
+
+        return back()->with('success', 'Rekomendasi ditandai sudah dibaca.');
     }
 
     private function calculateLinearRegression($transactions)

@@ -15,10 +15,30 @@
                         <form method="POST" action="{{ route('admin.smartfinance.recommend', $user->id) }}">
                             @csrf
                             <div class="flex items-center gap-2">
-                                <input type="text" name="message" placeholder="Tulis rekomendasi singkat..." class="border px-2 py-1 rounded w-96" required />
+                                <select id="template_select" name="template_id" class="border px-2 py-1 rounded">
+                                    <option value="">— Pilih Template (opsional) —</option>
+                                    @foreach($templates ?? collect() as $t)
+                                        <option value="{{ $t->id }}" data-body="{{ e($t->body) }}">{{ $t->title }} @if($t->category) ({{ $t->category }})@endif</option>
+                                    @endforeach
+                                </select>
+
+                                <textarea id="message_field" name="message" placeholder="Tulis rekomendasi..." class="border px-2 py-1 rounded w-96 h-16" required></textarea>
+
                                 <button type="submit" class="px-3 py-2 bg-green-600 text-white rounded">Kirim</button>
                             </div>
                         </form>
+
+                        <script>
+                            (function(){
+                                const sel = document.getElementById('template_select');
+                                const msg = document.getElementById('message_field');
+                                sel?.addEventListener('change', function(){
+                                    const opt = sel.options[sel.selectedIndex];
+                                    const body = opt?.dataset?.body ?? '';
+                                    if(body) msg.value = body;
+                                });
+                            })();
+                        </script>
                     </div>
                 </div>
 

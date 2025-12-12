@@ -152,7 +152,36 @@
 </div>
 @endif
 
-
+            {{-- Rekomendasi dari Admin (jika ada) --}}
+            @if(isset($recommendations) && $recommendations->isNotEmpty())
+            <div class="bg-yellow-50 p-4 rounded-lg shadow mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="font-semibold text-yellow-800">Rekomendasi dari Admin</h3>
+                    <a href="{{ route('smartfinance.index') }}#recommendations" class="text-sm text-yellow-700">Lihat semua</a>
+                </div>
+                <ul class="space-y-3 text-sm text-yellow-800">
+                    @foreach($recommendations as $rec)
+                        <li class="p-3 bg-white rounded shadow-sm">
+                            <div class="flex items-center justify-between">
+                                <div class="text-xs text-gray-500">Dari: {{ $rec->admin?->name ?? 'Admin' }} · {{ $rec->created_at->diffForHumans() }}</div>
+                                <div>
+                                    @if(!$rec->is_read)
+                                        <span class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded">Baru</span>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="mt-1">{!! nl2br(e($rec->rendered_message ?? $rec->message)) !!}</div>
+                            @if(!$rec->is_read)
+                                <form action="{{ route('smartfinance.recommendations.mark_read', $rec->id) }}" method="POST" class="mt-2">
+                                    @csrf
+                                    <button type="submit" class="text-sm text-gray-600 underline">Tandai sudah dibaca</button>
+                                </form>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
         </div>
 
     </div>

@@ -4,12 +4,17 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 
 class SmartFinanceRecommendation extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'admin_id', 'message'];
+    protected $casts = [
+        'is_read' => 'boolean',
+    ];
+
+    protected $fillable = ['user_id', 'admin_id', 'message', 'rendered_message', 'is_read'];
 
     public function user()
     {

@@ -31,6 +31,7 @@
                                     <td class="px-4 py-3 text-center">{{ $u->recommendations }}</td>
                                     <td class="px-4 py-3 text-center">
                                         <a href="{{ route('admin.smartfinance.show', $u->id) }}" class="px-3 py-1 bg-indigo-600 text-white rounded">Lihat</a>
+                                        <a href="{{ route('admin.smartfinance.templates.index') }}" class="px-3 py-1 ml-2 bg-gray-500 text-white rounded">Templates</a>
                                     </td>
                                 </tr>
                             @empty

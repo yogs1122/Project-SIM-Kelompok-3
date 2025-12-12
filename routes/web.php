@@ -74,6 +74,8 @@ Route::middleware(['auth'])->group(function () {
         // Admin Smart Finance
         Route::prefix('smart-finance')->name('smartfinance.')->group(function () {
             Route::get('/', [\App\Http\Controllers\Admin\AdminSmartFinanceController::class, 'index'])->name('index');
+            // Templates CRUD
+            Route::resource('templates', \App\Http\Controllers\Admin\AdminSmartFinanceTemplateController::class)->names('templates');
             Route::get('/{user}', [\App\Http\Controllers\Admin\AdminSmartFinanceController::class, 'show'])->name('show');
             Route::post('/{user}/recommend', [\App\Http\Controllers\Admin\AdminSmartFinanceController::class, 'storeRecommendation'])->name('recommend');
         });
@@ -96,6 +98,8 @@ Route::middleware(['auth'])->group(function () {
  Route::middleware(['auth'])->group(function () {
     Route::get('/smart-finance', [SmartFinanceController::class, 'index'])
         ->name('smartfinance.index');
+    Route::post('/smart-finance/recommendations/{rec}/mark-read', [SmartFinanceController::class, 'markRecommendationRead'])
+        ->name('smartfinance.recommendations.mark_read');
 });
 
 Route::middleware(['auth'])->group(function () {
