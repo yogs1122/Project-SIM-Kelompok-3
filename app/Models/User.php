@@ -5,10 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
+// HAPUS BARIS INI: use Illuminate\Contracts\Auth\MustVerifyEmail;
 
-class User extends Authenticatable implements MustVerifyEmail
-
+class User extends Authenticatable // HAPUS: implements MustVerifyEmail
 {
     use HasFactory, Notifiable;
 
@@ -29,12 +28,62 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
     ];
 
+    // Tambahkan ini jika ingin attributes otomatis tersedia
+    protected $appends = [
+        'total_savings',
+        'total_savings_target',
+        'savings_progress',
+        'total_balance',
+        'available_balance',
+        'locked_balance'
+    ];
+
+    // ==================== EXISTING RELATIONSHIPS ====================
+    
     // RELASI KE ROLE
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_roles');
     }
 
+    // RELASI KE WALLET
+    public function wallet()
+    {
+        return $this->hasOne(Wallet::class);
+    }
+
+    // RELASI KE TRANSACTIONS
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class);
+    }
+
+    // RELASI KE SALES FORUM POSTS
+    public function salesForumPosts()
+    {
+        return $this->hasMany(SalesForumPost::class);
+    }
+
+    // ==================== NEW: SAVINGS RELATIONSHIPS ====================
+    
+    /**
+     * RELASI KE SAVING PLANS (BARU)
+     */
+    public function savingPlans()
+    {
+        return $this->hasMany(SavingPlan::class);
+    }
+
+    /**
+     * RELASI KE SAVING TRANSACTIONS (BARU)
+     */
+    public function savingTransactions()
+    {
+        return $this->hasMany(SavingTransaction::class);
+    }
+
+    // ==================== EXISTING METHODS ====================
+    
     // CEK JIKA USER ADMIN
     public function isAdmin()
     {
@@ -56,21 +105,149 @@ class User extends Authenticatable implements MustVerifyEmail
         }
     }
 
-    // RELASI KE WALLET
-    public function wallet()
+    // ==================== NEW: SAVINGS METHODS ====================
+    
+    /**
+     * Get active saving plans
+     */
+    public function activeSavingPlans()
     {
-        return $this->hasOne(Wallet::class);
+        return $this->savingPlans()->where('status', 'active');
     }
 
-    // RELASI KE TRANSACTIONS
-    public function transactions()
+    /**
+     * Get completed saving plans
+     */
+    public function completedSavingPlans()
     {
-        return $this->hasMany(Transaction::class);
+        return $this->savingPlans()->where('status', 'completed');
     }
 
-    // RELASI KE SALES FORUM POSTS
-    public function salesForumPosts()
+    /**
+     * Get total savings amount from all active plans
+     */
+    public function getTotalSavingsAttribute()
     {
-        return $this->hasMany(SalesForumPost::class);
+        return $this->savingPlans()->where('status', 'active')->sum('current_amount');
+    }
+
+    /**
+     * Get total savings target from all active plans
+     */
+    public function getTotalSavingsTargetAttribute()
+    {
+        return $this->savingPlans()->where('status', 'active')->sum('target_amount');
+    }
+
+    /**
+     * Get overall savings progress percentage
+     */
+    public function getSavingsProgressAttribute()
+    {
+        $totalTarget = $this->total_savings_target;
+        return $totalTarget > 0 
+            ? round(($this->total_savings / $totalTarget) * 100, 2)
+            : 0;
+    }
+
+    /**
+     * Check if user has any saving plans
+     */
+    public function hasSavingPlans()
+    {
+        return $this->savingPlans()->count() > 0;
+    }
+
+    /**
+     * Get recent saving transactions
+     */
+    public function recentSavingTransactions($limit = 10)
+    {
+        return $this->savingTransactions()
+            ->with('plan')
+            ->latest()
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Create a new saving plan
+     */
+    public function createSavingPlan($data)
+    {
+        return $this->savingPlans()->create(array_merge($data, [
+            'user_id' => $this->id,
+            'status' => 'active'
+        ]));
+    }
+
+    // ==================== NEW: BALANCE METHODS ====================
+    
+    /**
+     * Get balance from wallet (jika ada) + savings
+     */
+    public function getTotalBalanceAttribute()
+    {
+        $walletBalance = $this->wallet ? $this->wallet->balance : 0;
+        return $walletBalance + $this->total_savings;
+    }
+
+    /**
+     * Get available balance (wallet saja, tidak termasuk savings)
+     */
+    public function getAvailableBalanceAttribute()
+    {
+        return $this->wallet ? $this->wallet->balance : 0;
+    }
+
+    /**
+     * Get locked balance (savings yang tidak bisa ditarik langsung)
+     */
+    public function getLockedBalanceAttribute()
+    {
+        return $this->total_savings;
+    }
+
+    /**
+     * Check if user has enough available balance
+     */
+    public function hasSufficientBalance($amount)
+    {
+        return $this->available_balance >= $amount;
+    }
+
+    /**
+     * Transfer from wallet to savings
+     */
+    public function transferToSavings($planId, $amount)
+    {
+        if (!$this->hasSufficientBalance($amount)) {
+            return ['success' => false, 'message' => 'Saldo tidak mencukupi'];
+        }
+
+        $plan = $this->savingPlans()->where('id', $planId)->first();
+        if (!$plan) {
+            return ['success' => false, 'message' => 'Rencana tabungan tidak ditemukan'];
+        }
+
+        // Kurangi wallet balance
+        if ($this->wallet) {
+            $this->wallet->balance -= $amount;
+            $this->wallet->save();
+        }
+
+        // Tambah ke saving plan
+        $result = $plan->addFunds($amount, 'wallet_transfer', 'Transfer dari wallet');
+
+        if ($result['success']) {
+            return [
+                'success' => true,
+                'message' => 'Transfer berhasil',
+                'new_wallet_balance' => $this->wallet ? $this->wallet->balance : 0,
+                'plan' => $plan
+            ];
+        }
+
+        return ['success' => false, 'message' => 'Transfer gagal'];
     }
 }

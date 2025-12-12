@@ -35,6 +35,7 @@ class RegisteredUserController extends Controller
             'email' => $request->email,
             'phone' => $request->phone,
             'password' => Hash::make($request->password),
+            'email_verified_at' => now(), // ✅ TAMBAH BARIS INI
         ]);
 
         // Buat wallet otomatis yang account_number = phone (digits only)
@@ -48,7 +49,8 @@ class RegisteredUserController extends Controller
         // Assign role ke user
         $user->assignRole($request->role);
 
-        event(new Registered($user));
+        // OPTIONAL: Kamu bisa KOMENTARI baris ini jika mau
+        // event(new Registered($user));
 
         Auth::login($user);
 

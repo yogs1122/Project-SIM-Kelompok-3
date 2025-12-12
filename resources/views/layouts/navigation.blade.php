@@ -10,22 +10,66 @@
                     </a>
                 </div>
 
-                <!-- Navigation Links -->
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
+                <!-- Navigation Links - Hanya untuk quick actions -->
+                <div class="hidden space-x-4 sm:-my-px sm:ms-10 sm:flex">
+                    <!-- Dashboard tetap ada -->
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
+                    </x-nav-link>
+                    
+                    <!-- Quick Top Up -->
+                    <x-nav-link :href="route('transactions.topup')" :active="request()->routeIs('transactions.topup')">
+                        <i class="fas fa-plus-circle mr-1"></i> Top Up
+                    </x-nav-link>
+                    
+                    <!-- Quick Transfer -->
+                    <x-nav-link :href="route('transactions.transfer')" :active="request()->routeIs('transactions.transfer')">
+                        <i class="fas fa-exchange-alt mr-1"></i> Transfer
+                    </x-nav-link>
+                    
+                    <!-- Quick Access to Savings -->
+                    <x-nav-link :href="route('savings.index')" :active="request()->routeIs('savings.*')">
+                        <div class="flex items-center">
+                            <i class="fas fa-piggy-bank mr-1"></i>
+                            <span>Tabungan</span>
+                            @auth
+                                @if(Auth::user()->activeSavingPlans()->count() > 0)
+                                    <span class="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full">
+                                        {{ Auth::user()->activeSavingPlans()->count() }}
+                                    </span>
+                                @endif
+                            @endauth
+                        </div>
                     </x-nav-link>
                 </div>
             </div>
 
             <!-- Settings Dropdown -->
             <div class="hidden sm:flex sm:items-center sm:ms-6">
+                <!-- Quick Balance Display -->
+                <div class="mr-4 hidden md:block">
+                    <div class="text-sm text-gray-500">Saldo Tersedia</div>
+                    <div class="font-semibold text-gray-900">
+                        Rp {{ number_format(Auth::user()->wallet->balance ?? 0, 0, ',', '.') }}
+                    </div>
+                </div>
+                
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center mr-2">
+                                    <i class="fas fa-user text-blue-600"></i>
+                                </div>
+                                <div class="text-left">
+                                    <div class="font-medium">{{ Auth::user()->name }}</div>
+                                    <div class="text-xs text-gray-500">
+                                        {{ Auth::user()->email }}
+                                    </div>
+                                </div>
+                            </div>
 
-                            <div class="ms-1">
+                            <div class="ms-2">
                                 <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
@@ -34,18 +78,40 @@
                     </x-slot>
 
                     <x-slot name="content">
+                        <!-- Quick Links -->
+                        <x-dropdown-link :href="route('dashboard')">
+                            <i class="fas fa-home mr-2"></i> Dashboard
+                        </x-dropdown-link>
+                        
+                        <x-dropdown-link :href="route('savings.index')">
+                            <i class="fas fa-piggy-bank mr-2"></i> Rencana Tabungan
+                        </x-dropdown-link>
+                        
+                        <x-dropdown-link :href="route('transactions.history')">
+                            <i class="fas fa-history mr-2"></i> Riwayat Transaksi
+                        </x-dropdown-link>
+                        
+                        <x-dropdown-link :href="route('smartfinance.index')">
+                            <i class="fas fa-chart-line mr-2"></i> Smart Finance
+                        </x-dropdown-link>
+                        
+                        <x-dropdown-link :href="route('sales_forum.index')">
+                            <i class="fas fa-store mr-2"></i> Sales Forum
+                        </x-dropdown-link>
+                        
+                        <div class="border-t my-1"></div>
+                        
                         <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
+                            <i class="fas fa-user-cog mr-2"></i> {{ __('Profile') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
-
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault();
                                                 this.closest('form').submit();">
-                                {{ __('Log Out') }}
+                                <i class="fas fa-sign-out-alt mr-2"></i> {{ __('Log Out') }}
                             </x-dropdown-link>
                         </form>
                     </x-slot>
@@ -68,7 +134,44 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
+                <i class="fas fa-home mr-2"></i> {{ __('Dashboard') }}
+            </x-responsive-nav-link>
+            
+            <!-- Mobile Menu Items -->
+            <x-responsive-nav-link :href="route('transactions.topup')" :active="request()->routeIs('transactions.topup')">
+                <i class="fas fa-plus-circle mr-2"></i> Top Up
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('transactions.transfer')" :active="request()->routeIs('transactions.transfer')">
+                <i class="fas fa-exchange-alt mr-2"></i> Transfer
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('savings.index')" :active="request()->routeIs('savings.*')">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center">
+                        <i class="fas fa-piggy-bank mr-2"></i>
+                        {{ __('Rencana Tabungan') }}
+                    </div>
+                    @auth
+                        @if(Auth::user()->activeSavingPlans()->count() > 0)
+                            <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full">
+                                {{ Auth::user()->activeSavingPlans()->count() }}
+                            </span>
+                        @endif
+                    @endauth
+                </div>
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('transactions.history')" :active="request()->routeIs('transactions.history')">
+                <i class="fas fa-history mr-2"></i> Riwayat Transaksi
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('smartfinance.index')" :active="request()->routeIs('smartfinance.*')">
+                <i class="fas fa-chart-line mr-2"></i> Smart Finance
+            </x-responsive-nav-link>
+            
+            <x-responsive-nav-link :href="route('sales_forum.index')" :active="request()->routeIs('sales_forum.*')">
+                <i class="fas fa-store mr-2"></i> Sales Forum
             </x-responsive-nav-link>
         </div>
 
@@ -77,11 +180,17 @@
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800">{{ Auth::user()->name }}</div>
                 <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
+                <div class="mt-2 text-sm">
+                    <span class="text-gray-600">Saldo: </span>
+                    <span class="font-semibold text-green-600">
+                        Rp {{ number_format(Auth::user()->wallet->balance ?? 0, 0, ',', '.') }}
+                    </span>
+                </div>
             </div>
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
+                    <i class="fas fa-user-cog mr-2"></i> {{ __('Profile') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->
@@ -91,7 +200,7 @@
                     <x-responsive-nav-link :href="route('logout')"
                             onclick="event.preventDefault();
                                         this.closest('form').submit();">
-                        {{ __('Log Out') }}
+                        <i class="fas fa-sign-out-alt mr-2"></i> {{ __('Log Out') }}
                     </x-responsive-nav-link>
                 </form>
             </div>
