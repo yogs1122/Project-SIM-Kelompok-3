@@ -7,8 +7,11 @@ use App\Http\Controllers\ProfilePhotoController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\SmartFinanceController;
 use App\Http\Controllers\SalesForumController;
+
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\Admin\AdminTransactionController;
+
+use App\Http\Controllers\SavingPlanController; //
 
 // Public Routes
 Route::get('/', function () {
@@ -19,31 +22,31 @@ Route::get('/', function () {
 require __DIR__.'/auth.php';
 
 // Protected Routes (harus login)
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth'])->group(function () { // ✅ HAPUS 'verified' DARI SINI
     
     // Dashboard utama berdasarkan role
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
-    // Transaction Routes
-    Route::prefix('transactions')->group(function () {
-        Route::get('/history', [TransactionController::class, 'history'])->name('transactions.history');
+    // ==================== TRANSACTION ROUTES ====================
+    Route::prefix('transactions')->name('transactions.')->group(function () {
+        Route::get('/history', [TransactionController::class, 'history'])->name('history');
         
         // Top Up
-        Route::get('/topup', [TransactionController::class, 'topupIndex'])->name('transactions.topup');
-        Route::post('/topup/review', [TransactionController::class, 'topupReview'])->name('transactions.topup.review');
-        Route::post('/topup', [TransactionController::class, 'topupStore'])->name('transactions.topup.store');
+        Route::get('/topup', [TransactionController::class, 'topupIndex'])->name('topup');
+        Route::post('/topup/review', [TransactionController::class, 'topupReview'])->name('topup.review');
+        Route::post('/topup', [TransactionController::class, 'topupStore'])->name('topup.store');
         
         // Transfer
-        Route::get('/transfer', [TransactionController::class, 'transferIndex'])->name('transactions.transfer');
-        Route::post('/transfer', [TransactionController::class, 'transferStore'])->name('transactions.transfer.store');
+        Route::get('/transfer', [TransactionController::class, 'transferIndex'])->name('transfer');
+        Route::post('/transfer', [TransactionController::class, 'transferStore'])->name('transfer.store');
         
         // Withdraw
-        Route::get('/withdraw', [TransactionController::class, 'withdrawIndex'])->name('transactions.withdraw');
-        Route::post('/withdraw', [TransactionController::class, 'withdrawStore'])->name('transactions.withdraw.store');
+        Route::get('/withdraw', [TransactionController::class, 'withdrawIndex'])->name('withdraw');
+        Route::post('/withdraw', [TransactionController::class, 'withdrawStore'])->name('withdraw.store');
         
         // Payment
-        Route::get('/payment', [TransactionController::class, 'paymentIndex'])->name('transactions.payment');
-        Route::post('/payment', [TransactionController::class, 'paymentStore'])->name('transactions.payment.store');
+        Route::get('/payment', [TransactionController::class, 'paymentIndex'])->name('payment');
+        Route::post('/payment', [TransactionController::class, 'paymentStore'])->name('payment.store');
     });
     
     // Admin Routes
@@ -79,9 +82,45 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{user}', [\App\Http\Controllers\Admin\AdminSmartFinanceController::class, 'show'])->name('show');
             Route::post('/{user}/recommend', [\App\Http\Controllers\Admin\AdminSmartFinanceController::class, 'storeRecommendation'])->name('recommend');
         });
+
+    // ==================== SAVINGS ROUTES (BARU) ====================
+    Route::prefix('savings')->name('savings.')->group(function () {
+        // Main CRUD routes
+        Route::get('/', [SavingPlanController::class, 'index'])->name('index');
+        Route::get('/create', [SavingPlanController::class, 'create'])->name('create');
+        Route::post('/', [SavingPlanController::class, 'store'])->name('store');
+        Route::get('/{id}', [SavingPlanController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [SavingPlanController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [SavingPlanController::class, 'update'])->name('update');
+        Route::delete('/{id}', [SavingPlanController::class, 'destroy'])->name('destroy');
+        
+        // Additional functionality
+        Route::post('/{id}/add-funds', [SavingPlanController::class, 'addFunds'])->name('add-funds');
+        Route::get('/{id}/transactions', [SavingPlanController::class, 'transactions'])->name('transactions');
+        Route::get('/statistics', [SavingPlanController::class, 'statistics'])->name('statistics');
+        
+        // Quick actions (optional)
+        Route::post('/{id}/complete', [SavingPlanController::class, 'complete'])->name('complete');
+        Route::post('/{id}/reactivate', [SavingPlanController::class, 'reactivate'])->name('reactivate');
     });
     
-    // Profile Routes (dari Breeze)
+    // ==================== SMART FINANCE ROUTES ====================
+    Route::get('/smart-finance', [SmartFinanceController::class, 'index'])
+        ->name('smartfinance.index');
+    
+    // ==================== SALES FORUM ROUTES ====================
+    Route::prefix('sales-forum')->name('sales_forum.')->group(function () {
+        Route::get('/', [SalesForumController::class, 'index'])->name('index');
+        Route::get('/create', [SalesForumController::class, 'create'])->name('create');
+        Route::post('/', [SalesForumController::class, 'store'])->name('store');
+        Route::get('/{salesForum}', [SalesForumController::class, 'show'])->name('show');
+        Route::get('/{salesForum}/edit', [SalesForumController::class, 'edit'])->name('edit');
+        Route::patch('/{salesForum}', [SalesForumController::class, 'update'])->name('update');
+        Route::delete('/{salesForum}', [SalesForumController::class, 'destroy'])->name('destroy');
+        Route::post('/{salesForum}/mark-sold', [SalesForumController::class, 'markAsSold'])->name('mark_sold');
+    });
+    
+    // ==================== PROFILE ROUTES ====================
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -95,28 +134,8 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/profile/photo', [ProfilePhotoController::class, 'delete'])->name('profile.photo.delete');
 });
 
- Route::middleware(['auth'])->group(function () {
-    Route::get('/smart-finance', [SmartFinanceController::class, 'index'])
-        ->name('smartfinance.index');
-    Route::post('/smart-finance/recommendations/{rec}/mark-read', [SmartFinanceController::class, 'markRecommendationRead'])
-        ->name('smartfinance.recommendations.mark_read');
-});
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/sales-forum', [SalesForumController::class, 'index'])->name('sales_forum.index');
-    Route::get('/sales-forum/create', [SalesForumController::class, 'create'])->name('sales_forum.create');
-    Route::post('/sales-forum', [SalesForumController::class, 'store'])->name('sales_forum.store');
-    Route::get('/sales-forum/{salesForum}', [SalesForumController::class, 'show'])->name('sales_forum.show');
-    Route::get('/sales-forum/{salesForum}/edit', [SalesForumController::class, 'edit'])->name('sales_forum.edit');
-    Route::patch('/sales-forum/{salesForum}', [SalesForumController::class, 'update'])->name('sales_forum.update');
-    Route::delete('/sales-forum/{salesForum}', [SalesForumController::class, 'destroy'])->name('sales_forum.destroy');
-    Route::post('/sales-forum/{salesForum}/mark-sold', [SalesForumController::class, 'markAsSold'])->name('sales_forum.mark_sold');
-});
-
 // Logout Route
 Route::post('/logout', function () {
     Auth::logout();
     return redirect('/login');
 })->name('logout');
-
-
