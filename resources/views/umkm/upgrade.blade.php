@@ -14,15 +14,53 @@
 
         <p class="mb-4">Untuk dapat membuat posting penjualan di Forum Jual Beli, akun Anda harus terdaftar sebagai <strong>Pedagang UMKM</strong>. Dengan melakukan upgrade, Anda akan mendapatkan akses untuk membuat produk, mengelola posting penjualan, dan fitur pedagang lainnya.</p>
 
-        <form method="POST" action="{{ route('umkm.upgrade.post') }}">
+        <form method="POST" action="{{ route('umkm.upgrade.post') }}" enctype="multipart/form-data">
             @csrf
-            <p class="mb-4">Klik tombol di bawah untuk mengupgrade akun Anda menjadi Pedagang UMKM.</p>
-            <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Upgrade ke UMKM</button>
-            <a href="{{ route('profile.edit') }}" class="ml-4 text-sm text-gray-600">Batal</a>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium">Nama Usaha</label>
+                <input type="text" name="business_name" value="{{ old('business_name') }}" class="mt-1 block w-full border-gray-200 rounded p-2" required>
+                @error('business_name') <div class="text-red-600 text-sm">{{ $message }}</div> @enderror
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium">Nama Pemilik (opsional)</label>
+                <input type="text" name="owner_name" value="{{ old('owner_name') }}" class="mt-1 block w-full border-gray-200 rounded p-2">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium">Nomor Telepon (opsional)</label>
+                <input type="text" name="phone" value="{{ old('phone') }}" class="mt-1 block w-full border-gray-200 rounded p-2">
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium">Alamat (opsional)</label>
+                <textarea name="address" class="mt-1 block w-full border-gray-200 rounded p-2">{{ old('address') }}</textarea>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium">Unggah Dokumen Verifikasi (KTP / SIUP) - opsional</label>
+                <input type="file" name="document" class="mt-1 block w-full">
+                @error('document') <div class="text-red-600 text-sm">{{ $message }}</div> @enderror
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700">Kirim Permintaan Upgrade</button>
+                <a href="{{ route('profile.edit') }}" class="ml-4 text-sm px-3 py-2 bg-gray-200 text-gray-800 rounded">Batal</a>
+            </div>
         </form>
 
         <hr class="my-6">
-        <p class="text-sm text-gray-600">Catatan: Proses upgrade ini bersifat langsung. Jika Anda membutuhkan verifikasi tambahan, sistem harus diperluas dengan proses approval.</p>
+        <p class="text-sm text-gray-600">Catatan: Permintaan Anda akan dikirim ke tim admin untuk verifikasi. Setelah disetujui, akun Anda akan memperoleh kemampuan membuat posting penjualan.</p>
+
+        <!-- Secondary prominent submit for visibility on all screens -->
+        <div class="mt-4">
+            <form method="POST" action="{{ route('umkm.upgrade.post') }}" enctype="multipart/form-data">
+                @csrf
+                <!-- Prominent full-width submit button -->
+                <button type="submit" class="w-full px-4 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-700">Kirim Permintaan Upgrade</button>
+            </form>
+        </div>
     </div>
 </div>
 @endsection

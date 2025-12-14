@@ -16,8 +16,12 @@ class ProfileController extends Controller
      */
     public function edit(Request $request): View
     {
+        $user = $request->user();
+        $umkmApplication = \App\Models\UmkmApplication::where('user_id', $user->id)->latest()->first();
+
         return view('profile.edit', [
-            'user' => $request->user(),
+            'user' => $user,
+            'umkmApplication' => $umkmApplication,
         ]);
     }
 
@@ -90,9 +94,30 @@ class ProfileController extends Controller
             return Redirect::route('profile.edit')->with('success', 'Anda sudah menjadi Pedagang UMKM.');
         }
 
-        // Assign role 'umkm' (sederhana — jika butuh verifikasi, tambahkan proses approval)
-        $user->assignRole('umkm');
+        $validated = $request->validate([
+            'business_name' => 'required|string|max:255',
+            'owner_name' => 'nullable|string|max:255',
+            'phone' => 'nullable|string|max:50',
+            'address' => 'nullable|string|max:2000',
+            'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ]);
 
-        return Redirect::route('profile.edit')->with('success', 'Akun berhasil diupgrade menjadi Pedagang UMKM.');
+        $docPath = null;
+        if ($request->hasFile('document')) {
+            $docPath = $request->file('document')->store('umkm_documents', 'public');
+        }
+
+        // Create application for manual review by admin
+        \App\Models\UmkmApplication::create([
+            'user_id' => $user->id,
+            'business_name' => $validated['business_name'],
+            'owner_name' => $validated['owner_name'] ?? null,
+            'phone' => $validated['phone'] ?? null,
+            'address' => $validated['address'] ?? null,
+            'document_path' => $docPath,
+            'status' => 'pending',
+        ]);
+
+        return Redirect::route('profile.edit')->with('success', 'Permintaan upgrade UMKM dikirim. Menunggu verifikasi admin.');
     }
 }

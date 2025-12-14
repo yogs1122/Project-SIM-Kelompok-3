@@ -26,6 +26,8 @@ class User extends Authenticatable // HAPUS: implements MustVerifyEmail
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'saldo_pribadi' => 'decimal:2',
+        'saldo_toko' => 'decimal:2',
     ];
 
     // Tambahkan ini jika ingin attributes otomatis tersedia
@@ -214,6 +216,47 @@ class User extends Authenticatable // HAPUS: implements MustVerifyEmail
     public function hasSufficientBalance($amount)
     {
         return $this->available_balance >= $amount;
+    }
+
+    // UMKM specific balances
+    public function getSaldoPribadiAttribute($value)
+    {
+        return $value === null ? 0.00 : (float) $value;
+    }
+
+    public function getSaldoTokoAttribute($value)
+    {
+        return $value === null ? 0.00 : (float) $value;
+    }
+
+    public function creditSaldoPribadi($amount)
+    {
+        $this->increment('saldo_pribadi', $amount);
+        $this->refresh();
+    }
+
+    public function debitSaldoPribadi($amount)
+    {
+        if ($this->saldo_pribadi < $amount) {
+            throw new \Exception('Saldo pribadi tidak mencukupi');
+        }
+        $this->decrement('saldo_pribadi', $amount);
+        $this->refresh();
+    }
+
+    public function creditSaldoToko($amount)
+    {
+        $this->increment('saldo_toko', $amount);
+        $this->refresh();
+    }
+
+    public function debitSaldoToko($amount)
+    {
+        if ($this->saldo_toko < $amount) {
+            throw new \Exception('Saldo toko tidak mencukupi');
+        }
+        $this->decrement('saldo_toko', $amount);
+        $this->refresh();
     }
 
     /**

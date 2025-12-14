@@ -18,47 +18,54 @@
                     </x-nav-link>
                     
 
-                    @if(Auth::user()->isAdmin())
-                        <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
-                            {{ __('Manajemen User') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('admin.transactions.index')" :active="request()->routeIs('admin.transactions.*')">
-                            {{ __('Transaksi') }}
-                        </x-nav-link>
-                        <x-nav-link :href="route('admin.smartfinance.index')" :active="request()->routeIs('admin.smartfinance.*')">
-                            {{ __('Smart Finance') }}
-                        </x-nav-link>
+                    @auth
+                        @if(auth()->user()->isAdmin())
+                            <x-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
+                                {{ __('Manajemen User') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('admin.transactions.index')" :active="request()->routeIs('admin.transactions.*')">
+                                {{ __('Transaksi') }}
+                            </x-nav-link>
+                            <x-nav-link :href="route('admin.smartfinance.index')" :active="request()->routeIs('admin.smartfinance.*')">
+                                {{ __('Smart Finance') }}
+                            </x-nav-link>
+                        @endif
+                    @endauth
+
+                    @if(Route::has('smartfinance.index'))
+                    <x-nav-link :href="route('smartfinance.index')" :active="request()->routeIs('smartfinance.*')">
+                        <i class="fas fa-chart-line mr-1"></i> Smart Finance
+                    </x-nav-link>
                     @endif
 
-                    <!-- Quick Top Up -->
-                    <x-nav-link :href="route('transactions.topup')" :active="request()->routeIs('transactions.topup')">
-                        <i class="fas fa-plus-circle mr-1"></i> Top Up
+                    @if(Route::has('sales_forum.index'))
+                    <x-nav-link :href="route('sales_forum.index')" :active="request()->routeIs('sales_forum.*')">
+                        <i class="fas fa-store mr-1"></i> Forum Jual Beli
                     </x-nav-link>
-                    
-                    <!-- Quick Transfer -->
-                    <x-nav-link :href="route('transactions.transfer')" :active="request()->routeIs('transactions.transfer')">
-                        <i class="fas fa-exchange-alt mr-1"></i> Transfer
-                    </x-nav-link>
+                    @endif
                     
                     <!-- Quick Access to Savings -->
+                    @if(Route::has('savings.index'))
                     <x-nav-link :href="route('savings.index')" :active="request()->routeIs('savings.*')">
                         <div class="flex items-center">
                             <i class="fas fa-piggy-bank mr-1"></i>
                             <span>Tabungan</span>
                             @auth
-                                @if(Auth::user()->activeSavingPlans()->count() > 0)
+                                @if(auth()->user()->activeSavingPlans()->count() > 0)
                                     <span class="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full">
-                                        {{ Auth::user()->activeSavingPlans()->count() }}
+                                        {{ auth()->user()->activeSavingPlans()->count() }}
                                     </span>
                                 @endif
                             @endauth
                         </div>
                     </x-nav-link>
+                    @endif
 
                 </div>
             </div>
 
             <!-- Settings Dropdown -->
+            @auth
             <div class="hidden sm:flex sm:items-center sm:ms-6">
                 <!-- Quick Balance Display -->
                 <div class="mr-4 hidden md:block">
@@ -97,20 +104,8 @@
                             <i class="fas fa-home mr-2"></i> Dashboard
                         </x-dropdown-link>
                         
-                        <x-dropdown-link :href="route('savings.index')">
-                            <i class="fas fa-piggy-bank mr-2"></i> Rencana Tabungan
-                        </x-dropdown-link>
-                        
                         <x-dropdown-link :href="route('transactions.history')">
                             <i class="fas fa-history mr-2"></i> Riwayat Transaksi
-                        </x-dropdown-link>
-                        
-                        <x-dropdown-link :href="route('smartfinance.index')">
-                            <i class="fas fa-chart-line mr-2"></i> Smart Finance
-                        </x-dropdown-link>
-                        
-                        <x-dropdown-link :href="route('sales_forum.index')">
-                            <i class="fas fa-store mr-2"></i> Sales Forum
                         </x-dropdown-link>
                         
                         <div class="border-t my-1"></div>
@@ -131,6 +126,7 @@
                     </x-slot>
                 </x-dropdown>
             </div>
+            @endauth
 
             <!-- Hamburger -->
             <div class="-me-2 flex items-center sm:hidden">
@@ -160,6 +156,7 @@
                 <i class="fas fa-exchange-alt mr-2"></i> Transfer
             </x-responsive-nav-link>
             
+            @if(Route::has('savings.index'))
             <x-responsive-nav-link :href="route('savings.index')" :active="request()->routeIs('savings.*')">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
@@ -167,26 +164,31 @@
                         {{ __('Rencana Tabungan') }}
                     </div>
                     @auth
-                        @if(Auth::user()->activeSavingPlans()->count() > 0)
+                        @if(auth()->user()->activeSavingPlans()->count() > 0)
                             <span class="inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-blue-600 rounded-full">
-                                {{ Auth::user()->activeSavingPlans()->count() }}
+                                {{ auth()->user()->activeSavingPlans()->count() }}
                             </span>
                         @endif
                     @endauth
                 </div>
             </x-responsive-nav-link>
+            @endif
             
             <x-responsive-nav-link :href="route('transactions.history')" :active="request()->routeIs('transactions.history')">
                 <i class="fas fa-history mr-2"></i> Riwayat Transaksi
             </x-responsive-nav-link>
             
+            @if(Route::has('smartfinance.index'))
             <x-responsive-nav-link :href="route('smartfinance.index')" :active="request()->routeIs('smartfinance.*')">
                 <i class="fas fa-chart-line mr-2"></i> Smart Finance
             </x-responsive-nav-link>
-            
+            @endif
+
+            @if(Route::has('sales_forum.index'))
             <x-responsive-nav-link :href="route('sales_forum.index')" :active="request()->routeIs('sales_forum.*')">
-                <i class="fas fa-store mr-2"></i> Sales Forum
+                <i class="fas fa-store mr-2"></i> Forum Jual Beli
             </x-responsive-nav-link>
+            @endif
         </div>
 
         <!-- Responsive Settings Options -->

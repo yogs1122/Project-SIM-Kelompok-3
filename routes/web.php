@@ -18,6 +18,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+// Payment gateway webhook (public)
+Route::post('/webhook/payment', [\App\Http\Controllers\Webhook\PaymentWebhookController::class, 'handle'])->name('webhook.payment');
+
 // Authentication Routes (dari Breeze)
 require __DIR__.'/auth.php';
 
@@ -83,6 +86,17 @@ Route::middleware(['auth'])->group(function () { // ✅ HAPUS 'verified' DARI SI
             Route::post('/{user}/recommend', [\App\Http\Controllers\Admin\AdminSmartFinanceController::class, 'storeRecommendation'])->name('recommend');
         });
 
+        // UMKM Applications (admin review)
+        Route::prefix('umkm-applications')->name('umkm_applications.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AdminUmkmApplicationController::class, 'index'])->name('index');
+            Route::get('/{application}', [\App\Http\Controllers\Admin\AdminUmkmApplicationController::class, 'show'])->name('show');
+            Route::post('/{application}/approve', [\App\Http\Controllers\Admin\AdminUmkmApplicationController::class, 'approve'])->name('approve');
+            Route::post('/{application}/reject', [\App\Http\Controllers\Admin\AdminUmkmApplicationController::class, 'reject'])->name('reject');
+        });
+
+    // close admin group
+    });
+
     // ==================== SAVINGS ROUTES (BARU) ====================
     Route::prefix('savings')->name('savings.')->group(function () {
         // Main CRUD routes
@@ -120,6 +134,22 @@ Route::middleware(['auth'])->group(function () { // ✅ HAPUS 'verified' DARI SI
         Route::post('/{salesForum}/mark-sold', [SalesForumController::class, 'markAsSold'])->name('mark_sold');
     });
     
+    // ==================== UMKM MERCHANT ROUTES ====================
+    Route::middleware(['auth','role:umkm'])->prefix('umkm')->name('umkm.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Umkm\MerchantController::class, 'index'])->name('dashboard');
+        Route::resource('products', \App\Http\Controllers\Umkm\UmkmProductController::class);
+        Route::get('/orders', [\App\Http\Controllers\Umkm\UmkmOrderController::class, 'index'])->name('orders.index');
+        // Wallet routes for UMKM merchant
+        Route::get('/wallet', [\App\Http\Controllers\Umkm\WalletController::class, 'show'])->name('wallet.show');
+        Route::get('/wallet/history', [\App\Http\Controllers\Umkm\WalletController::class, 'history'])->name('wallet.history');
+        Route::post('/wallet/transfer', [\App\Http\Controllers\Umkm\WalletController::class, 'transferToUser'])->name('wallet.transfer');
+        Route::post('/wallet/internal-transfer', [\App\Http\Controllers\Umkm\WalletController::class, 'internalTransfer'])->name('wallet.internal_transfer');
+        Route::post('/wallet/withdraw', [\App\Http\Controllers\Umkm\WalletController::class, 'withdraw'])->name('wallet.withdraw');
+        // Merchant purchase order management
+        Route::get('/purchase-orders', [\App\Http\Controllers\PurchaseOrderController::class, 'merchantIndex'])->name('purchase_orders.merchant_index');
+        Route::post('/purchase-orders/{order}/confirm', [\App\Http\Controllers\PurchaseOrderController::class, 'merchantConfirm'])->name('purchase_orders.merchant_confirm');
+    });
+    
     // ==================== PROFILE ROUTES ====================
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -128,6 +158,11 @@ Route::middleware(['auth'])->group(function () { // ✅ HAPUS 'verified' DARI SI
     // UMKM Upgrade Routes
     Route::get('/umkm/upgrade', [ProfileController::class, 'showUpgradeForm'])->name('umkm.upgrade');
     Route::post('/umkm/upgrade', [ProfileController::class, 'upgradeToUmkm'])->name('umkm.upgrade.post');
+
+    // Purchase Orders (buyer flow)
+    Route::post('/purchase-orders', [\App\Http\Controllers\PurchaseOrderController::class, 'store'])->name('purchase_orders.store');
+    Route::get('/purchase-orders/{reference}', [\App\Http\Controllers\PurchaseOrderController::class, 'show'])->name('purchase_orders.show');
+    Route::post('/purchase-orders/{order}/upload-proof', [\App\Http\Controllers\PurchaseOrderController::class, 'uploadProof'])->name('purchase_orders.upload_proof');
     
     // Profile Photo Routes
     Route::post('/profile/photo', [ProfilePhotoController::class, 'upload'])->name('profile.photo.upload');

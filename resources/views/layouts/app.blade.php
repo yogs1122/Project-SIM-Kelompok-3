@@ -47,17 +47,29 @@
         <span class="font-medium text-gray-700 label">Dashboard</span>
     </a>
 
-    @if(!Auth::user() || !Auth::user()->isAdmin())
+    @if(auth()->check() && !auth()->user()->isAdmin())
     <a href="{{ route('transactions.topup') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">⬆️</span>
         <span class="font-medium text-gray-700 label">Top Up</span>
     </a>
-    @endif
 
-    @if(!Auth::user() || !Auth::user()->isAdmin())
     <a href="{{ route('transactions.transfer') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
         <span class="mr-3 icon">🔁</span>
         <span class="font-medium text-gray-700 label">Transfer</span>
+    </a>
+    @endif
+
+    @if(Route::has('smartfinance.index'))
+    <a href="{{ route('smartfinance.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
+        <span class="mr-3 icon">📊</span>
+        <span class="font-medium text-gray-700 label">Smart Finance</span>
+    </a>
+    @endif
+
+    @if(Route::has('sales_forum.index'))
+    <a href="{{ route('sales_forum.index') }}" class="flex items-center px-3 py-2 rounded-md bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border-l-4 border-green-500 nav-item transition">
+        <span class="mr-3 icon text-lg">🛍️</span>
+        <span class="font-bold text-green-700 label">Forum Jual Beli</span>
     </a>
     @endif
 
@@ -89,15 +101,14 @@
     </a>
     @endif
 
-    <a href="{{ route('smartfinance.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
-        <span class="mr-3 icon">📊</span>
-        <span class="font-medium text-gray-700 label">Smart Finance</span>
-    </a>
+    
 
-    <a href="{{ route('sales_forum.index') }}" class="flex items-center px-3 py-2 rounded-md bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 border-l-4 border-green-500 nav-item transition">
-        <span class="mr-3 icon text-lg">🛍️</span>
-        <span class="font-bold text-green-700 label">{{ Auth::user()->isAdmin() ? 'Forum Penjualan' : 'Forum Jual Beli' }}</span>
+    @if(Route::has('savings.index'))
+    <a href="{{ route('savings.index') }}" class="flex items-center px-3 py-2 rounded-md hover:bg-gray-50 nav-item">
+        <span class="mr-3 icon">🐖</span>
+        <span class="font-medium text-gray-700 label">Rencana Tabungan</span>
     </a>
+    @endif
 
     <!-- Logout -->
     <form method="POST" action="{{ route('logout') }}">
@@ -130,7 +141,9 @@
                     <!-- Page Content -->
                     <main>
                         @yield('content')
-                        {{ $slot }}
+                        @isset($slot)
+                            {{ $slot }}
+                        @endisset
 
                     </main>
                 </div>
