@@ -6,6 +6,7 @@ use App\Models\SalesForumPost;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Services\UmkmWalletService;
 
 class SalesForumController extends Controller
 {
@@ -175,5 +176,36 @@ class SalesForumController extends Controller
 
         return redirect()->route('sales_forum.show', $salesForum)
                         ->with('success', 'Post ditandai sebagai TERJUAL');
+    }
+
+    /**
+     * Purchase a sales post: debit buyer saldo_pribadi and credit merchant saldo_toko.
+     */
+    public function purchase(Request $request, SalesForumPost $salesForum, UmkmWalletService $walletService)
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        if ($salesForum->user_id === $user->id) {
+            return back()->withErrors(['message' => 'Anda tidak dapat membeli dari diri sendiri.']);
+        }
+
+        if (!$salesForum->price || $salesForum->status !== 'active') {
+            return back()->withErrors(['message' => 'Produk tidak tersedia untuk dibeli.']);
+        }
+
+        try {
+            $walletService->purchaseFromBuyerToStore($user, $salesForum->user, (float) $salesForum->price);
+        } catch (\Exception $e) {
+            return back()->withErrors(['message' => $e->getMessage()]);
+        }
+
+        // Optionally mark post as sold
+        $salesForum->update(['status' => 'sold']);
+
+        return redirect()->route('sales_forum.show', $salesForum)->with('success', 'Pembelian berhasil — saldo telah dikirim ke penjual.');
     }
 }

@@ -118,4 +118,60 @@ class UmkmWalletService
             ]);
         });
     }
+
+    /**
+     * Process purchase: debit buyer `saldo_pribadi` and credit merchant `saldo_toko` atomically.
+     */
+    public function purchaseFromBuyerToStore(User $buyer, User $merchant, float $amount, float $fee = 0.0)
+    {
+        return DB::transaction(function () use ($buyer, $merchant, $amount, $fee) {
+            if ($buyer->id === $merchant->id) {
+                throw new \Exception('Tidak bisa membeli dari diri sendiri');
+            }
+
+            $source = null;
+
+            // Prefer debit from saldo_pribadi
+            if ($buyer->saldo_pribadi >= ($amount + $fee)) {
+                $buyer->debitSaldoPribadi($amount + $fee);
+                $source = 'saldo_pribadi';
+            } elseif ($buyer->wallet && $buyer->wallet->balance >= ($amount + $fee)) {
+                // Fallback to wallet balance (legacy/top-up flow)
+                $buyer->wallet()->decrement('balance', $amount + $fee);
+                $buyer->refresh();
+                $source = 'wallet_balance';
+            } else {
+                // Provide helpful debug info in exception
+                $bal1 = $buyer->saldo_pribadi;
+                $bal2 = $buyer->wallet ? $buyer->wallet->balance : 0;
+                throw new \Exception('Saldo tidak mencukupi untuk pembelian. Saldo pribadi: '.$bal1.', Wallet: '.$bal2);
+            }
+
+            // Credit merchant store
+            $merchant->creditSaldoToko($amount);
+
+            // Record transactions
+            $txBuyer = UmkmTransaction::create([
+                'user_id' => $buyer->id,
+                'type' => 'purchase_out',
+                'source' => $source,
+                'target' => 'merchant:'.$merchant->id,
+                'amount' => $amount,
+                'fee' => $fee,
+                'meta' => ['merchant_id' => $merchant->id]
+            ]);
+
+            $txMerchant = UmkmTransaction::create([
+                'user_id' => $merchant->id,
+                'type' => 'sale',
+                'source' => 'buyer:'.$buyer->id,
+                'target' => 'saldo_toko',
+                'amount' => $amount,
+                'fee' => 0,
+                'meta' => ['buyer_id' => $buyer->id]
+            ]);
+
+            return [$txBuyer, $txMerchant];
+        });
+    }
 }

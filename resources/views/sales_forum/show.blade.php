@@ -20,6 +20,16 @@
     </x-slot>
 
     <div class="py-6 px-6">
+        @if(session('success'))
+            <div class="mb-4 p-4 bg-green-50 border border-green-200 text-green-800 rounded">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if($errors->any())
+            <div class="mb-4 p-4 bg-red-50 border border-red-200 text-red-800 rounded">
+                {{ $errors->first() }}
+            </div>
+        @endif
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Main Content -->
             <div class="lg:col-span-2">
@@ -121,6 +131,14 @@
                             <p class="text-sm font-semibold mb-2">💡 Tips:</p>
                             <p class="text-xs opacity-95">Konfirmasi keaslian produk sebelum melakukan transaksi. Gunakan fitur wallet untuk pembayaran yang lebih aman.</p>
                         </div>
+                        @if($salesForum->price)
+                            <div class="mt-4">
+                                <form action="{{ route('sales_forum.purchase', $salesForum) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="w-full mt-3 bg-white text-green-600 font-bold py-3 rounded-lg transition shadow-lg">🛒 Beli Sekarang (pakai Wallet)</button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 @else
                     <div class="bg-blue-50 border-l-4 border-blue-500 rounded-xl p-6 sticky top-20">

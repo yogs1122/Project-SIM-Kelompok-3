@@ -21,6 +21,15 @@ class DashboardController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
+        // Detect seller/merchant roles (supports 'seller', 'merchant', or legacy 'umkm')
+        $isSeller = $user->roles()->whereIn('name', ['seller', 'merchant', 'umkm'])->exists();
+
+        // If seller, provide merchant wallet data to the view for conditional rendering
+        $merchantWallet = null;
+        if ($isSeller) {
+            $merchantWallet = $user->merchantWallet;
+        }
+
         $wallet = $user->wallet;
         $transactions = $user->transactions()->latest()->paginate(10);
         $recentTransactions = $user->transactions()->latest()->limit(5)->get();
@@ -69,7 +78,9 @@ class DashboardController extends Controller
             'months',
             'chartIncome',
             'chartExpense',
-            'tips'
+            'tips',
+            'isSeller',
+            'merchantWallet'
         ));
     }
 }

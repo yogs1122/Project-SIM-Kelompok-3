@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\MerchantWallet;
 // HAPUS BARIS INI: use Illuminate\Contracts\Auth\MustVerifyEmail;
 
 class User extends Authenticatable // HAPUS: implements MustVerifyEmail
@@ -52,6 +53,12 @@ class User extends Authenticatable // HAPUS: implements MustVerifyEmail
     public function wallet()
     {
         return $this->hasOne(Wallet::class);
+    }
+
+    // RELASI KE MERCHANT WALLET
+    public function merchantWallet()
+    {
+        return $this->hasOne(MerchantWallet::class);
     }
 
     // RELASI KE TRANSACTIONS

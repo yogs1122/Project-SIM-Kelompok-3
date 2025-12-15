@@ -222,7 +222,52 @@ class TransactionController extends Controller
     // Riwayat Transaksi
     public function history()
     {
-        $transactions = Auth::user()->transactions()->latest()->paginate(15);
+        $user = Auth::user();
+
+        // Eloquent transactions (wallet topups/transfers/withdraws)
+        $tx1 = $user->transactions()->get()->map(function($t) {
+            return (object) [
+                'created_at' => $t->created_at,
+                'type' => $t->type,
+                'description' => $t->description,
+                'amount' => $t->amount,
+                'status' => $t->status ?? 'completed',
+                'reference_number' => $t->reference_number ?? null,
+            ];
+        });
+
+        // UMKM transactions (purchase/sale/internal etc)
+        $umkm = \App\Models\UmkmTransaction::where('user_id', $user->id)->get()->map(function($u) {
+            $desc = $u->meta['note'] ?? ($u->meta['from'] ?? ($u->meta['to'] ?? null));
+            return (object) [
+                'created_at' => $u->created_at,
+                'type' => $u->type,
+                'description' => $desc ?? $u->type,
+                'amount' => $u->amount,
+                'status' => 'completed',
+                'reference_number' => 'UMKM-'.$u->id,
+            ];
+        });
+
+        // Merge and sort by created_at desc
+        $all = $tx1->merge($umkm)->sortByDesc('created_at')->values();
+
+        // Manual pagination
+        $perPage = 15;
+        $page = request()->get('page', 1);
+        $offset = ($page - 1) * $perPage;
+        $itemsForCurrentPage = $all->slice($offset, $perPage)->all();
+
+        $paginator = new \Illuminate\Pagination\LengthAwarePaginator(
+            $itemsForCurrentPage,
+            $all->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'query' => request()->query()]
+        );
+
+        $transactions = $paginator;
+
         return view('transactions.history', compact('transactions'));
     }
 }

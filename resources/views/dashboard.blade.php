@@ -130,6 +130,18 @@
 
     <div class="py-12 bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            {{-- Role-specific verification banner --}}
+            @if(isset($isSeller) && $isSeller)
+                <div class="mb-6 p-4 rounded-lg bg-blue-50 border-l-4 border-blue-400">
+                    <div class="font-semibold text-blue-800">Seller Dashboard (verified)</div>
+                    <div class="text-sm text-blue-700">Anda melihat dashboard sebagai <strong>seller</strong>. Merchant wallet: <strong>Rp {{ number_format(optional($merchantWallet)->balance ?? 0, 0, ',', '.') }}</strong></div>
+                </div>
+            @else
+                <div class="mb-6 p-4 rounded-lg bg-gray-50 border-l-4 border-gray-300">
+                    <div class="font-semibold text-gray-800">User Dashboard</div>
+                    <div class="text-sm text-gray-600">Anda melihat dashboard sebagai pengguna biasa.</div>
+                </div>
+            @endif
             <!-- Wallet Summary Card -->
             @if($wallet)
             <div class="mb-8 animate-in">

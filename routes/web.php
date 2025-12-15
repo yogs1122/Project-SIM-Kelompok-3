@@ -94,6 +94,15 @@ Route::middleware(['auth'])->group(function () { // ✅ HAPUS 'verified' DARI SI
             Route::post('/{application}/reject', [\App\Http\Controllers\Admin\AdminUmkmApplicationController::class, 'reject'])->name('reject');
         });
 
+        // Withdraw management
+        Route::prefix('withdraws')->name('withdraws.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\Admin\AdminWithdrawController::class, 'index'])->name('index');
+            Route::get('/{id}', [\App\Http\Controllers\Admin\AdminWithdrawController::class, 'show'])->name('show');
+            Route::post('/{id}/approve', [\App\Http\Controllers\Admin\AdminWithdrawController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [\App\Http\Controllers\Admin\AdminWithdrawController::class, 'reject'])->name('reject');
+            Route::post('/{id}/complete', [\App\Http\Controllers\Admin\AdminWithdrawController::class, 'complete'])->name('complete');
+        });
+
     // close admin group
     });
 
@@ -128,6 +137,7 @@ Route::middleware(['auth'])->group(function () { // ✅ HAPUS 'verified' DARI SI
         Route::get('/create', [SalesForumController::class, 'create'])->name('create');
         Route::post('/', [SalesForumController::class, 'store'])->name('store');
         Route::get('/{salesForum}', [SalesForumController::class, 'show'])->name('show');
+        Route::post('/{salesForum}/purchase', [SalesForumController::class, 'purchase'])->name('purchase');
         Route::get('/{salesForum}/edit', [SalesForumController::class, 'edit'])->name('edit');
         Route::patch('/{salesForum}', [SalesForumController::class, 'update'])->name('update');
         Route::delete('/{salesForum}', [SalesForumController::class, 'destroy'])->name('destroy');
@@ -135,6 +145,16 @@ Route::middleware(['auth'])->group(function () { // ✅ HAPUS 'verified' DARI SI
     });
     
     // ==================== UMKM MERCHANT ROUTES ====================
+    // Seller (merchant) routes for sellers
+    Route::prefix('seller')->name('seller.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\Seller\SellerWalletController::class, 'index'])->name('dashboard');
+        // Dedicated seller UI (separate dashboard URL for testing)
+        Route::get('/dashboard', [\App\Http\Controllers\Seller\DashboardController::class, 'index']);
+        Route::get('/transactions', [\App\Http\Controllers\Seller\SellerWalletController::class, 'transactions'])->name('transactions');
+        Route::post('/withdraw', [\App\Http\Controllers\Seller\SellerWalletController::class, 'withdraw'])->name('withdraw');
+    });
+
+    // Legacy UMKM merchant routes (kept for backward compatibility)
     Route::middleware(['auth','role:umkm'])->prefix('umkm')->name('umkm.')->group(function () {
         Route::get('/dashboard', [\App\Http\Controllers\Umkm\MerchantController::class, 'index'])->name('dashboard');
         Route::resource('products', \App\Http\Controllers\Umkm\UmkmProductController::class);
