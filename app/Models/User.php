@@ -105,6 +105,12 @@ class User extends Authenticatable // HAPUS: implements MustVerifyEmail
         return $this->roles()->where('name', 'umkm')->exists();
     }
 
+    // CEK JIKA USER SELLER/MERCHANT
+    public function isSeller()
+    {
+        return $this->roles()->whereIn('name', ['seller', 'merchant', 'umkm'])->exists();
+    }
+
     // TAMBAHKAN ROLE KE USER
     public function assignRole($roleName)
     {
